@@ -25,6 +25,7 @@ dependencies:
 - mtl
 - comonad
 - either
+- validation
 
 library:
   source-dirs: src
