@@ -20,6 +20,8 @@ import Data.Either
 import Data.Validation
 -- import qualified Data.Set as S
 
+data Bowl = Bowl [Int] [Bowl] -- Cofree [] [Int]
+
 {-
 mix :: (Comonad w, Semigroup (w a))
     => (a -> a -> Maybe (w a))
@@ -36,6 +38,7 @@ mix f (x:xs) =
   --   g h x = eitherToValidation . maybeToRight [x] $ h x
 -}
 
+{-
 newtype Bowl a = Bowl (Either [a] a)
 
 instance Semigroup a => Semigroup (Bowl a) where
@@ -59,8 +62,7 @@ mix :: Monoid a
     => (a -> a -> Bool)
     -> [a]
     -> [a]
-    
-mix f xs = undefined
+-}
 
 {-
 instance Monoid a => Comonad Bowl | Bowl -> a where
