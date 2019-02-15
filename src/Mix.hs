@@ -30,7 +30,8 @@ mix :: (Int -> Int -> Bool)
     -> [S.Set Int]
 mix f xs
   | S.null xs = []
-  | otherwise = undefined
+  | S.size xs == 1 = [xs]
+  | otherwise
   where
     f1 :: (Int -> Int -> Bool)
        -> S.Set Int
@@ -38,7 +39,7 @@ mix f xs
        -> Bool
     f1 _ (S.null -> True) _ =
       False
-    f1 g (S.splitAt 1 -> (x1, xs1)) xs2 =
+    f1 g (S.deleteFindMin -> (x1, xs1)) xs2 =
       (foldr (||) False . S.map (g x1) $ xs2) || f1 g xs1 xs2
     
     f2 :: (Int -> Int -> Bool)
@@ -47,22 +48,40 @@ mix f xs
        -> [Cofree [] (S.Set Int)]
     f2 g xs ys =
       case partition (f1 g xs . extract) ys of
-        (ys1, ys2) -> -- ys1, ys2 :: [Cofree [] (S.Set Int)]
-          undefined
+        (fmap duplicate -> ys1, ys2) -> -- ys1 :: [Cofree [] (Cofree [] (S.Set Int))], ys2 :: [Cofree [] (S.Set Int)]
+          let
+            zs = (f21 xs <$>) <$> ys1 :: [Cofree [] (Either (Cofree [] (S.Set Int)) (S.Set Int))]
+          in
+            (foldr (<>) xs (f22 <$> zs) :< (zs >>= f23)) : ys2 -- (f21 xs <$>) <$> ys1 -- f21 xs <$> ys1 :: [Cofree [] (Either (Cofree [] (S.Set Int)) (S.Set Int))]
       where
         f21 :: S.Set Int
             -> Cofree [] (S.Set Int)
             -> Either (Cofree [] (S.Set Int)) (S.Set Int)
         f21 xs ys
-          | f1 g xs (extract ys) || any (f21 xs <$> unwrap ys) =
+          | f1 g xs (extract ys) || (not . null . rights $ f21 xs <$> unwrap ys) =
             Right . extract $ ys
           | otherwise =
             Left ys
         
-        f22 :: [Either (Cofree [] (S.Set Int)) (S.Set Int)]
+        f22 :: Cofree [] (Either (Cofree [] (S.Set Int)) (S.Set Int))
+            -> S.Set Int
+        f22 ys = foldMap id $ f223 <$> ys
+          where
+            f223 :: Either (Cofree [] (S.Set Int)) (S.Set Int) -> S.Set Int
+            f223 (Left _) = S.empty
+            f223 (Right x) = x
+
+        f23 :: Cofree [] (Either (Cofree [] (S.Set Int)) (S.Set Int))
             -> [Cofree [] (S.Set Int)]
-        f22 (Left x : xs) = [x]
-        f22 (Right _ : xs) = undefined 
+        f23 (Left x :< xs) = [x]
+        f23 (Right _ :< xs) = xs >>= f23
+    
+    f3 :: (Int -> Int -> Bool)
+       -> S.Set Int
+       -> [Cofree [] (S.Set Int)]
+    f3 _ (S.null -> True) = []
+    f3 _ x@(S.size -> 1) = [x :< []]
+    f3 f (S.splitAt 1 -> (x, xs)) = f2 f x . f3 f $ xs
 
 
 {-
