@@ -6,13 +6,14 @@ import Lib
 import Mix
 
 main :: IO ()
-main = print $ mix f (S.fromList [1..6])
+main = print $ mix' f [1..30000]
 
-f 1 2 = True
-f 2 3 = True
-f 3 1 = True
-f 1 4 = True
-f 4 1 = True
-f 2 5 = True
-f 4 6 = True
-f _ _ = False
+f x y
+  | x * 2 == y = True
+  | x == y + 2 = True
+  | x * 3 == y = True
+  | x == y ^ 3 = True
+  | x * 4 == y = True
+  | x == y ^ 4 = True
+  | x + 2 == y = True
+  | otherwise = False
