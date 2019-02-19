@@ -6,8 +6,9 @@ import Lib
 import Mix
 
 main :: IO ()
-main = print $ mix' f [1..30000]
+main = print $ mix' f [1..10]
 
+{-
 f x y
   | x * 2 == y = True
   | x == y + 2 = True
@@ -17,3 +18,10 @@ f x y
   | x == y ^ 4 = True
   | x + 2 == y = True
   | otherwise = False
+-}
+
+f x y
+  | x + 1 == y = True
+f 3 1 = True
+f 7 5 = True
+f _ _ = False
