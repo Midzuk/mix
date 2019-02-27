@@ -1,33 +1,34 @@
-{-# LANGUAGE TemplateHaskell      #-}
-{-# LANGUAGE GADTs                #-}
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE RankNTypes           #-}
--- {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE InstanceSigs         #-}
--- {-# LANGUAGE AllowAmbiguousTypes  #-}
-{-# LANGUAGE ViewPatterns         #-}
-{-# LANGUAGE LambdaCase           #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GADTs            #-}
+{-# LANGUAGE RankNTypes       #-}
+{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE InstanceSigs     #-}
+{-# LANGUAGE LambdaCase       #-}
+
 
 
 module Mix where
 
-import Control.Comonad.Cofree
-import Control.Monad.State
-import Control.Comonad
-import Data.Either
+import           Control.Comonad.Cofree
+import           Control.Monad.Free
+import           Control.Monad.State
+import           Control.Comonad
+import           Data.Either
 -- import Data.Either.Combinators
 -- import Data.Either.Validation
-import Data.Validation
+import           Data.Validation
 import qualified Data.Set as S
-import Data.List
-import Data.Monoid
-import Control.Monad.Zip
-import Data.Foldable
+import           Control.Monad.Zip
+import           Data.Foldable
+import           Data.List
+import           Data.Monoid
+
+
 
 -- type Flour = S.Set Int
 -- type Bowl = Cofree [] Flour
 
-
+-- バグあり
 mix' :: (Int -> Int -> Bool)
      -> [Int]
      -> [[Int]]
@@ -39,7 +40,7 @@ mix' f xs = f2 xs >>= toList
        -> [Cofree [] [Int]]
        -> [Cofree [] [Int]]
     f1 x ys =
-      case partition (or . fmap (f x) . extract) ys of
+      case partition (or . fmap (f x) . extract) ys of --　バグ要修正
         (ys1, ys2) -> -- ys1, ys2 :: [Cofree [] [Int]]
           let
             zs = f11 <$> ys1 :: [Cofree [] (Either [Int] [Int])]
@@ -72,9 +73,35 @@ mix' f xs = f2 xs >>= toList
     f2 [x] = [[x] :< []]
     f2 (x:xs) = f1 x . f2 $ xs
 
+mix :: (Int -> Int -> Bool)
+    -> [Int]
+    -> [[Int]]
+mix f = undefined
+  where
+    g :: Int
+      -> [Free (Cofree []) Int]
+      -> [Free (Cofree []) Int]
+    g x [] = [Pure x]
+    g x (y:ys) =
+      case y of
+        Pure x'
+          | x `f` x' && x' `f` x -> Free $ (Free $ Pure x :< [Pure x']) :< [Pure x']
+          | x `f` x'             -> Free $ Pure x :< [Pure x']
+          | x' `f` x             -> Free $ (Free $ Pure x :< [Pure x']) :< []
+    
+    to :: Int
+       -> [Free (Cofree []) Int]
+       -> [Free (Cofree []) Int]
+    to x [] = []
+    to x (y:ys) = undefined
 
+    from :: Int
+         -> [Free (Cofree []) Int]
+         -> [Free (Cofree []) Int]
+    from = undefined
+    
 
-
+{-
 mix :: (Int -> Int -> Maybe Bool)
     -> [Int]
     -> [[[Int]]]
@@ -126,6 +153,7 @@ mix f xs = f3 <$> (f2 xs >>= toList) -- foldr _ []  -- f3 f xs >>= foldr (:) []
         xs : xss ->
           (x : xs) : xss
     f3 (x :< ys) = [x] : (((x:<) . (:[]) <$> ys) >>= f3)
+-}
 
 {-
     f1 :: Int
