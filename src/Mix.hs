@@ -99,7 +99,11 @@ mix f = undefined
          -> [Free (Cofree []) Int]
          -> [Free (Cofree []) Int]
     from = undefined
-    
+
+    rotate :: Int
+           -> Free (Cofree []) Int
+           -> Maybe (Free (Cofree []) Int)
+    rotate = undefined
 
 {-
 mix :: (Int -> Int -> Maybe Bool)
